@@ -1,0 +1,177 @@
+{
+  "name": "auto-internship-applier",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1Xs0Y7QH-ByvaZ7vgjm4Gu0mgHC9O04WYDOR1_A-VPuY",
+          "mode": "list",
+          "cachedResultName": "My Job Applications",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xs0Y7QH-ByvaZ7vgjm4Gu0mgHC9O04WYDOR1_A-VPuY/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Sheet1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Xs0Y7QH-ByvaZ7vgjm4Gu0mgHC9O04WYDOR1_A-VPuY/edit#gid=0"
+        },
+        "options": {}
+      },
+      "id": "cd1cf63c-f0aa-49f0-828b-39321c912ad7",
+      "name": "Google Sheets Trigger",
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "YAJLFkmi2FmOTvKh",
+          "name": "Google Sheets Trigger account 4"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=You are a MCA student applying for a software development internship.\nGiven your name, the internship role you're applying for, and optionally your Details, experience, and skills — write a short, polite, confident and ready-to-send email introducing yourself and expressing interest in the internship opportunity.\nKeep the tone enthusiastic but formal. Mention that you're eager to learn and contribute, and that you're looking forward to hearing back. End the email with a thank you and your name.\nUse \"Dear Hiring Manager\" as the greeting. Do not include any placeholder text, brackets, or variables that need to be filled in. The email should be complete and ready to send as-is.\nHere is your information:\nName:  {{ $json['Full Name'] }}\nto:  {{ $json.Email }}\nInternship Role:  {{ $json['Position Applied'] }}\nDetails:  {{ $json.Details }}\nExperience:  {{ $json['Experience (Years)'] }}\nSkills:{{ $json.Skills }}",
+        "hasOutputParser": true,
+        "batching": {}
+      },
+      "id": "99c6c4e9-fc02-4747-a2e0-db1417caa04d",
+      "name": "Basic LLM Chain",
+      "type": "@n8n/n8n-nodes-langchain.chainLlm",
+      "typeVersion": 1.9,
+      "position": [
+        224,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "fb938781-bd82-4ed2-aa4f-f6cc46e7ee5a",
+      "name": "Google Gemini Chat Model",
+      "type": "@n8n/n8n-nodes-langchain.lmChatGoogleGemini",
+      "typeVersion": 1.2,
+      "position": [
+        240,
+        240
+      ],
+      "credentials": {
+        "googlePalmApi": {
+          "id": "PO1S87IQWspkYqY2",
+          "name": "Google Gemini(PaLM) Api account 3"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsonSchemaExample": "{\n  \"to\": \"hr@examplecompany.com\",\n  \"subject\": \"Application for Frontend Developer Internship\",\n  \"body\": \"Dear HR Team,\\n\\nI hope this message finds you well. My name is Ananya Reddy, and I am currently pursuing my B.Tech. I am writing to express my interest in the Frontend Developer Internship position at your company.\\n\\nI'm learning HTML, CSS, and JavaScript, and I’m excited to build web apps and strengthen my development skills. Although I have about 0.5 years of hands-on practice, I am eager to contribute, learn, and grow in a real-world development environment.\\n\\nThank you for considering my application. I look forward to the opportunity to contribute and learn as part of your team.\\n\\nBest regards,\\nAnanya Reddy\"\n}"
+      },
+      "id": "d80388c3-ae80-43b7-8c5b-5fd64ba3a601",
+      "name": "Structured Output Parser",
+      "type": "@n8n/n8n-nodes-langchain.outputParserStructured",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        240
+      ]
+    },
+    {
+      "parameters": {
+        "sendTo": "abhaydansana@gmail.com",
+        "subject": "={{ $json.output.subject }}",
+        "emailType": "text",
+        "message": "={{ $json.output.body }}",
+        "options": {}
+      },
+      "id": "9e4076fc-6cf6-44eb-a381-e39d0ddac47d",
+      "name": "Send a message",
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.2,
+      "position": [
+        576,
+        0
+      ],
+      "webhookId": "f5ab5ba2-f97d-42fd-a705-1f35fe09efac",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "SFGEQl7MGXv3GXAE",
+          "name": "Gmail account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Basic LLM Chain": {
+      "main": [
+        [
+          {
+            "node": "Send a message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Gemini Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Structured Output Parser": {
+      "ai_outputParser": [
+        [
+          {
+            "node": "Basic LLM Chain",
+            "type": "ai_outputParser",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "binaryMode": "separate"
+  },
+  "versionId": "d9ce2f24-2335-4d61-8f4a-c40eb79be231",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "df273539ff7e71e3f95cf39e07d4aa07fe02d69a37cac533675ce8e6070fa269"
+  },
+  "nodeGroups": [],
+  "id": "H7Ftz6tDZwEj0Dz5",
+  "tags": []
+}
